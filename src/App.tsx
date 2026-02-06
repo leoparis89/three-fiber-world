@@ -60,6 +60,8 @@ function Disc() {
     }
   })
 
+  // colliders="trimesh" is the magic — it auto-generates collision geometry
+  // from ALL child meshes. So back face = floor, rim = walls, glass = ceiling.
   return (
     <RigidBody
       ref={rigidBodyRef}

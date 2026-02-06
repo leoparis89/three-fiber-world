@@ -167,20 +167,38 @@ function Disc() {
   )
 }
 
-function Ball() {
+const BALL_COLORS = [
+  '#e63946', '#f4a261', '#e9c46a', '#2a9d8f', '#264653',
+  '#9b5de5', '#f15bb5', '#00bbf9', '#00f5d4', '#fee440'
+]
+
+function Balls() {
   return (
-    <RigidBody
-      position={[DISC_POSITION[0], DISC_POSITION[1], DISC_POSITION[2] + 0.2]}
-      colliders={false}
-      restitution={0.5}
-      linearDamping={0.3}
-    >
-      <BallCollider args={[0.15]} friction={0.8} />
-      <mesh>
-        <sphereGeometry args={[0.15, 32, 32]} />
-        <meshStandardMaterial color="#e63946" metalness={0.3} roughness={0.4} />
-      </mesh>
-    </RigidBody>
+    <>
+      {BALL_COLORS.map((color, i) => {
+        const angle = (i / BALL_COLORS.length) * Math.PI * 2
+        const r = 0.5 + (i % 3) * 0.3
+        return (
+          <RigidBody
+            key={i}
+            position={[
+              DISC_POSITION[0] + Math.cos(angle) * r,
+              DISC_POSITION[1] + Math.sin(angle) * r,
+              DISC_POSITION[2] + 0.2
+            ]}
+            colliders={false}
+            restitution={0.5}
+            linearDamping={0.3}
+          >
+            <BallCollider args={[0.12]} friction={0.8} />
+            <mesh>
+              <sphereGeometry args={[0.12, 32, 32]} />
+              <meshStandardMaterial color={color} metalness={0.3} roughness={0.4} />
+            </mesh>
+          </RigidBody>
+        )
+      })}
+    </>
   )
 }
 
@@ -190,7 +208,7 @@ function Scene() {
       <CameraRig />
       <Physics gravity={[0, -9.81, 0]}>
         <Disc />
-        <Ball />
+        <Balls />
       </Physics>
       {/* Floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -3, 0]}>

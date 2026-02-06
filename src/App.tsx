@@ -81,7 +81,7 @@ function Disc() {
       {/* Front face background */}
       <mesh position={[0, 0.076, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[2, 64]} />
-        <meshStandardMaterial color="#f5f5dc" />
+        <meshStandardMaterial color="#red" />
       </mesh>
       {/* Front face image */}
       <mesh position={[0, 0.08, 0]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -91,12 +91,12 @@ function Disc() {
       {/* Back face - this is the FLOOR for the ball */}
       <mesh position={[0, -0.076, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <circleGeometry args={[2, 64]} />
-        <meshStandardMaterial color="#f5f5dc" />
+        <meshStandardMaterial color="blue" />
       </mesh>
       {/* Seamless metallic rim - WALLS */}
       <mesh position={[0, 0.21, 0]}>
         <cylinderGeometry args={[2, 2, 0.58, 64, 1, true]} />
-        <meshStandardMaterial color="#222" metalness={0.8} roughness={0.2} />
+        <meshStandardMaterial color="pink" metalness={0.8} roughness={0.2} />
       </mesh>
       {/* Glass disc cover - CEILING */}
       <mesh position={[0, 0.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>

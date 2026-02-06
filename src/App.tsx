@@ -57,11 +57,44 @@ function Disc() {
   const texture = useTexture('/Felix_The_Cat.webp')
   texture.colorSpace = THREE.SRGBColorSpace
   const angle = useRef(0)
+  const velocity = useRef(-0.005) // auto-spin speed
+  const isDragging = useRef(false)
+  const lastX = useRef(0)
+
+  useEffect(() => {
+    const handlePointerMove = (e: PointerEvent) => {
+      if (isDragging.current) {
+        const deltaX = e.clientX - lastX.current
+        velocity.current = deltaX * 0.002 // Convert drag to rotation
+        lastX.current = e.clientX
+      }
+    }
+    const handlePointerUp = () => {
+      isDragging.current = false
+    }
+    window.addEventListener('pointermove', handlePointerMove)
+    window.addEventListener('pointerup', handlePointerUp)
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerup', handlePointerUp)
+    }
+  }, [])
+
+  const handlePointerDown = (e: { stopPropagation: () => void; clientX: number }) => {
+    e.stopPropagation()
+    isDragging.current = true
+    lastX.current = e.clientX
+  }
 
   useFrame(() => {
     if (rigidBodyRef.current) {
-      angle.current -= 0.005
-      // Rotate around local Y axis (which is world Z after the initial rotation)
+      // Apply velocity with friction (slows down over time when not dragging)
+      if (!isDragging.current) {
+        // Gradually return to auto-spin, with friction
+        velocity.current = velocity.current * 0.98 + (-0.005) * 0.02
+      }
+      angle.current += velocity.current
+      
       const q = new THREE.Quaternion()
       q.setFromEuler(new THREE.Euler(Math.PI / 2, angle.current, 0))
       rigidBodyRef.current.setNextKinematicRotation({ x: q.x, y: q.y, z: q.z, w: q.w })
@@ -78,13 +111,13 @@ function Disc() {
       rotation={[Math.PI / 2, 0, 0]}
       colliders="trimesh"
     >
-      {/* Front face background */}
-      <mesh position={[0, 0.076, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      {/* Front face background - clickable for drag */}
+      <mesh position={[0, 0.076, 0]} rotation={[-Math.PI / 2, 0, 0]} onPointerDown={handlePointerDown}>
         <circleGeometry args={[2, 64]} />
-        <meshStandardMaterial color="#red" />
+        <meshStandardMaterial color="#f5f5dc" />
       </mesh>
       {/* Front face image */}
-      <mesh position={[0, 0.08, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh position={[0, 0.08, 0]} rotation={[-Math.PI / 2, 0, 0]} onPointerDown={handlePointerDown}>
         <planeGeometry args={[2.5, 2.5]} />
         <meshStandardMaterial map={texture} transparent />
       </mesh>
@@ -96,7 +129,7 @@ function Disc() {
       {/* Seamless metallic rim - WALLS */}
       {/* Rim - flat ring with 0.1 thickness */}
       {/* Outer wall */}
-      <mesh position={[0, 0.21, 0]}>
+      <mesh position={[0, 0.21, 0]} onPointerDown={handlePointerDown}>
         <cylinderGeometry args={[2.1, 2.1, 0.58, 64, 1, true]} />
         <meshStandardMaterial color="pink" metalness={0.8} roughness={0.2} />
       </mesh>
@@ -115,8 +148,8 @@ function Disc() {
         <ringGeometry args={[2.0, 2.1, 64]} />
         <meshStandardMaterial color="pink" metalness={0.8} roughness={0.2} />
       </mesh>
-      {/* Glass disc cover - CEILING */}
-      <mesh position={[0, 0.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      {/* Glass disc cover - CEILING - also clickable */}
+      <mesh position={[0, 0.5, 0]} rotation={[-Math.PI / 2, 0, 0]} onPointerDown={handlePointerDown}>
         <circleGeometry args={[2, 64]} />
         <meshPhysicalMaterial
           transparent

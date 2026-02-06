@@ -104,7 +104,9 @@ function CameraRig() {
 function Disc() {
   const rigidBodyRef = useRef<RapierRigidBody>(null)
   const texture = useTexture('/Felix_The_Cat.webp')
+  const woodTexture = useTexture('https://threejs.org/examples/textures/hardwood2_diffuse.jpg')
   texture.colorSpace = THREE.SRGBColorSpace
+  woodTexture.colorSpace = THREE.SRGBColorSpace
   const angle = useRef(0)
   const velocity = useRef(-0.005) // auto-spin speed
   const isDragging = useRef(false)
@@ -173,7 +175,7 @@ function Disc() {
       {/* Back face - this is the FLOOR for the ball */}
       <mesh position={[0, -0.076, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <circleGeometry args={[2, 64]} />
-        <meshStandardMaterial color="blue" />
+        <meshStandardMaterial map={woodTexture} />
       </mesh>
       {/* Seamless metallic rim - WALLS */}
       {/* Rim - flat ring with 0.1 thickness */}

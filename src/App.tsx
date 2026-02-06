@@ -1,6 +1,7 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useTexture } from '@react-three/drei'
-import { Physics, RigidBody, CuboidCollider } from '@react-three/rapier'
+import { Physics, RigidBody, BallCollider } from '@react-three/rapier'
+import type { RapierRigidBody } from '@react-three/rapier'
 import { useRef, useEffect } from 'react'
 import * as THREE from 'three'
 import './App.css'
@@ -44,18 +45,29 @@ function CameraRig() {
 }
 
 function Disc() {
-  const groupRef = useRef<THREE.Group>(null)
+  const rigidBodyRef = useRef<RapierRigidBody>(null)
   const texture = useTexture('/Felix_The_Cat.webp')
   texture.colorSpace = THREE.SRGBColorSpace
+  const angle = useRef(0)
 
   useFrame(() => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y -= 0.005
+    if (rigidBodyRef.current) {
+      angle.current -= 0.005
+      // Rotate around local Y axis (which is world Z after the initial rotation)
+      const q = new THREE.Quaternion()
+      q.setFromEuler(new THREE.Euler(Math.PI / 2, angle.current, 0))
+      rigidBodyRef.current.setNextKinematicRotation({ x: q.x, y: q.y, z: q.z, w: q.w })
     }
   })
 
   return (
-    <group ref={groupRef} position={DISC_POSITION} rotation={[Math.PI / 2, 0, 0]}>
+    <RigidBody
+      ref={rigidBodyRef}
+      type="kinematicPosition"
+      position={DISC_POSITION}
+      rotation={[Math.PI / 2, 0, 0]}
+      colliders="trimesh"
+    >
       {/* Front face background */}
       <mesh position={[0, 0.076, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[2, 64]} />
@@ -66,18 +78,17 @@ function Disc() {
         <planeGeometry args={[2.5, 2.5]} />
         <meshStandardMaterial map={texture} transparent />
       </mesh>
-      {/* Back face */}
+      {/* Back face - this is the FLOOR for the ball */}
       <mesh position={[0, -0.076, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <circleGeometry args={[2, 64]} />
         <meshStandardMaterial color="#f5f5dc" />
       </mesh>
-      {/* Seamless metallic rim from back to glass cover */}
+      {/* Seamless metallic rim - WALLS */}
       <mesh position={[0, 0.21, 0]}>
         <cylinderGeometry args={[2, 2, 0.58, 64, 1, true]} />
         <meshStandardMaterial color="#222" metalness={0.8} roughness={0.2} />
       </mesh>
-
-      {/* Glass disc cover */}
+      {/* Glass disc cover - CEILING */}
       <mesh position={[0, 0.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[2, 64]} />
         <meshPhysicalMaterial
@@ -92,7 +103,24 @@ function Disc() {
           depthWrite={false}
         />
       </mesh>
-    </group>
+    </RigidBody>
+  )
+}
+
+function Ball() {
+  return (
+    <RigidBody
+      position={[DISC_POSITION[0], DISC_POSITION[1], DISC_POSITION[2] + 0.2]}
+      colliders={false}
+      restitution={0.5}
+      linearDamping={0.3}
+    >
+      <BallCollider args={[0.15]} friction={0.8} />
+      <mesh>
+        <sphereGeometry args={[0.15, 32, 32]} />
+        <meshStandardMaterial color="#e63946" metalness={0.3} roughness={0.4} />
+      </mesh>
+    </RigidBody>
   )
 }
 
@@ -100,15 +128,9 @@ function Scene() {
   return (
     <>
       <CameraRig />
-      <Disc />
       <Physics gravity={[0, -9.81, 0]}>
-        <RigidBody type="fixed" position={[0, -3, 0]} friction={0.5}>
-          <CuboidCollider args={[100, 0.1, 100]} />
-          <mesh rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[200, 200]} />
-            <meshStandardMaterial color="#3a5a40" />
-          </mesh>
-        </RigidBody>
+        <Disc />
+        <Ball />
       </Physics>
       <ambientLight intensity={0.4} />
       <directionalLight position={[5, 5, 5]} intensity={1} color="white" />

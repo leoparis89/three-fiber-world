@@ -202,6 +202,19 @@ function Balls() {
   )
 }
 
+function Floor() {
+  const texture = useTexture('https://threejs.org/examples/textures/terrain/grasslight-big.jpg')
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping
+  texture.repeat.set(50, 50)
+  
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -3, 0]}>
+      <planeGeometry args={[200, 200]} />
+      <meshStandardMaterial map={texture} />
+    </mesh>
+  )
+}
+
 function Scene() {
   return (
     <>
@@ -210,11 +223,7 @@ function Scene() {
         <Disc />
         <Balls />
       </Physics>
-      {/* Floor */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -3, 0]}>
-        <planeGeometry args={[200, 200]} />
-        <meshStandardMaterial color="#3a5a40" />
-      </mesh>
+      <Floor />
       <ambientLight intensity={0.4} />
       <directionalLight position={[5, 5, 5]} intensity={1} color="white" />
       <directionalLight position={[-5, 3, -5]} intensity={0.5} color="#ffeedd" />

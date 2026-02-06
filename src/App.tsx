@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { useTexture } from '@react-three/drei'
+import { useTexture, Sky } from '@react-three/drei'
 import { Physics, RigidBody, BallCollider } from '@react-three/rapier'
 import type { RapierRigidBody } from '@react-three/rapier'
 import { useRef, useEffect } from 'react'
@@ -224,6 +224,7 @@ function Scene() {
         <Balls />
       </Physics>
       <Floor />
+      <Sky sunPosition={[100, 2, 100]} turbidity={10} rayleigh={0.5} />
       <ambientLight intensity={0.4} />
       <directionalLight position={[5, 5, 5]} intensity={1} color="white" />
       <directionalLight position={[-5, 3, -5]} intensity={0.5} color="#ffeedd" />

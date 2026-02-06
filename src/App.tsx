@@ -11,17 +11,22 @@ const ORBIT_RADIUS = 10
 
 function CameraRig() {
   const { camera } = useThree()
-  const angle = useRef(0)
-  const keys = useRef({ left: false, right: false })
+  const angleH = useRef(0) // horizontal angle
+  const angleV = useRef(0) // vertical angle
+  const keys = useRef({ left: false, right: false, up: false, down: false })
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') keys.current.left = true
       if (e.key === 'ArrowRight') keys.current.right = true
+      if (e.key === 'ArrowUp') keys.current.up = true
+      if (e.key === 'ArrowDown') keys.current.down = true
     }
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') keys.current.left = false
       if (e.key === 'ArrowRight') keys.current.right = false
+      if (e.key === 'ArrowUp') keys.current.up = false
+      if (e.key === 'ArrowDown') keys.current.down = false
     }
     window.addEventListener('keydown', handleKeyDown)
     window.addEventListener('keyup', handleKeyUp)
@@ -32,12 +37,15 @@ function CameraRig() {
   }, [])
 
   useFrame(() => {
-    if (keys.current.left) angle.current += 0.02
-    if (keys.current.right) angle.current -= 0.02
+    if (keys.current.left) angleH.current += 0.02
+    if (keys.current.right) angleH.current -= 0.02
+    if (keys.current.up) angleV.current = Math.min(angleV.current + 0.02, Math.PI / 2 - 0.1)
+    if (keys.current.down) angleV.current = Math.max(angleV.current - 0.02, -Math.PI / 2 + 0.1)
 
-    const x = DISC_POSITION[0] + Math.sin(angle.current) * ORBIT_RADIUS
-    const z = DISC_POSITION[2] + Math.cos(angle.current) * ORBIT_RADIUS
-    camera.position.set(x, DISC_POSITION[1], z)
+    const x = DISC_POSITION[0] + Math.sin(angleH.current) * Math.cos(angleV.current) * ORBIT_RADIUS
+    const y = DISC_POSITION[1] + Math.sin(angleV.current) * ORBIT_RADIUS
+    const z = DISC_POSITION[2] + Math.cos(angleH.current) * Math.cos(angleV.current) * ORBIT_RADIUS
+    camera.position.set(x, y, z)
     camera.lookAt(DISC_POSITION[0], DISC_POSITION[1], DISC_POSITION[2])
   })
 
@@ -134,6 +142,11 @@ function Scene() {
         <Disc />
         <Ball />
       </Physics>
+      {/* Floor */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -3, 0]}>
+        <planeGeometry args={[200, 200]} />
+        <meshStandardMaterial color="#3a5a40" />
+      </mesh>
       <ambientLight intensity={0.4} />
       <directionalLight position={[5, 5, 5]} intensity={1} color="white" />
       <directionalLight position={[-5, 3, -5]} intensity={0.5} color="#ffeedd" />

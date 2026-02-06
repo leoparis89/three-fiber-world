@@ -9,6 +9,9 @@ import './App.css'
 const DISC_POSITION: [number, number, number] = [0, 2, -8]
 const ORBIT_RADIUS = 10
 
+// Shared flag to prevent camera rotation when spinning the disc
+const discDragging = { current: false }
+
 function CameraRig() {
   const { camera, gl } = useThree()
   const angleH = useRef(0) // horizontal orbit angle
@@ -33,13 +36,15 @@ function CameraRig() {
       if (e.key === 'ArrowDown') keys.current.down = false
     }
 
-    // Mouse drag for rotation
+    // Mouse drag for rotation (but not when disc is being spun)
     const handleMouseDown = (e: MouseEvent) => {
-      isDragging.current = true
-      lastMouse.current = { x: e.clientX, y: e.clientY }
+      if (!discDragging.current) {
+        isDragging.current = true
+        lastMouse.current = { x: e.clientX, y: e.clientY }
+      }
     }
     const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging.current) {
+      if (isDragging.current && !discDragging.current) {
         const deltaX = e.clientX - lastMouse.current.x
         const deltaY = e.clientY - lastMouse.current.y
         angleH.current -= deltaX * 0.005
@@ -122,6 +127,7 @@ function Disc() {
     }
     const handlePointerUp = () => {
       isDragging.current = false
+      discDragging.current = false
     }
     window.addEventListener('pointermove', handlePointerMove)
     window.addEventListener('pointerup', handlePointerUp)
@@ -134,6 +140,7 @@ function Disc() {
   const handlePointerDown = (e: { stopPropagation: () => void; clientX: number }) => {
     e.stopPropagation()
     isDragging.current = true
+    discDragging.current = true // Tell camera not to rotate
     lastX.current = e.clientX
   }
 

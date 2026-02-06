@@ -94,8 +94,25 @@ function Disc() {
         <meshStandardMaterial color="blue" />
       </mesh>
       {/* Seamless metallic rim - WALLS */}
+      {/* Rim - flat ring with 0.1 thickness */}
+      {/* Outer wall */}
       <mesh position={[0, 0.21, 0]}>
-        <cylinderGeometry args={[2, 2, 0.58, 64, 1, true]} />
+        <cylinderGeometry args={[2.1, 2.1, 0.58, 64, 1, true]} />
+        <meshStandardMaterial color="pink" metalness={0.8} roughness={0.2} />
+      </mesh>
+      {/* Inner wall */}
+      <mesh position={[0, 0.21, 0]}>
+        <cylinderGeometry args={[2.0, 2.0, 0.58, 64, 1, true]} />
+        <meshStandardMaterial color="pink" metalness={0.8} roughness={0.2} side={THREE.BackSide} />
+      </mesh>
+      {/* Top cap */}
+      <mesh position={[0, 0.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[2.0, 2.1, 64]} />
+        <meshStandardMaterial color="pink" metalness={0.8} roughness={0.2} />
+      </mesh>
+      {/* Bottom cap */}
+      <mesh position={[0, -0.08, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[2.0, 2.1, 64]} />
         <meshStandardMaterial color="pink" metalness={0.8} roughness={0.2} />
       </mesh>
       {/* Glass disc cover - CEILING */}

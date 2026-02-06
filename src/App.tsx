@@ -10,12 +10,16 @@ const DISC_POSITION: [number, number, number] = [0, 2, -8]
 const ORBIT_RADIUS = 10
 
 function CameraRig() {
-  const { camera } = useThree()
-  const angleH = useRef(0) // horizontal angle
-  const angleV = useRef(0) // vertical angle
+  const { camera, gl } = useThree()
+  const angleH = useRef(0) // horizontal orbit angle
+  const angleV = useRef(0.2) // vertical orbit angle
+  const distance = useRef(ORBIT_RADIUS)
   const keys = useRef({ left: false, right: false, up: false, down: false })
+  const isDragging = useRef(false)
+  const lastMouse = useRef({ x: 0, y: 0 })
 
   useEffect(() => {
+    // Arrow keys for movement
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') keys.current.left = true
       if (e.key === 'ArrowRight') keys.current.right = true
@@ -28,25 +32,70 @@ function CameraRig() {
       if (e.key === 'ArrowUp') keys.current.up = false
       if (e.key === 'ArrowDown') keys.current.down = false
     }
+
+    // Mouse drag for rotation
+    const handleMouseDown = (e: MouseEvent) => {
+      isDragging.current = true
+      lastMouse.current = { x: e.clientX, y: e.clientY }
+    }
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging.current) {
+        const deltaX = e.clientX - lastMouse.current.x
+        const deltaY = e.clientY - lastMouse.current.y
+        angleH.current -= deltaX * 0.005
+        angleV.current = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, angleV.current + deltaY * 0.005))
+        lastMouse.current = { x: e.clientX, y: e.clientY }
+      }
+    }
+    const handleMouseUp = () => {
+      isDragging.current = false
+    }
+
     window.addEventListener('keydown', handleKeyDown)
     window.addEventListener('keyup', handleKeyUp)
+    gl.domElement.addEventListener('mousedown', handleMouseDown)
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', handleMouseUp)
+
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
+      gl.domElement.removeEventListener('mousedown', handleMouseDown)
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [])
+  }, [gl])
+
+  const offset = useRef({ x: 0, z: 0 })
 
   useFrame(() => {
-    if (keys.current.left) angleH.current += 0.02
-    if (keys.current.right) angleH.current -= 0.02
-    if (keys.current.up) angleV.current = Math.min(angleV.current + 0.02, Math.PI / 2 - 0.1)
-    if (keys.current.down) angleV.current = Math.max(angleV.current - 0.02, -Math.PI / 2 + 0.1)
+    // Calculate movement direction based on camera angle
+    const moveSpeed = 0.15
+    if (keys.current.up) {
+      offset.current.x -= Math.sin(angleH.current) * moveSpeed
+      offset.current.z -= Math.cos(angleH.current) * moveSpeed
+    }
+    if (keys.current.down) {
+      offset.current.x += Math.sin(angleH.current) * moveSpeed
+      offset.current.z += Math.cos(angleH.current) * moveSpeed
+    }
+    if (keys.current.left) {
+      offset.current.x -= Math.cos(angleH.current) * moveSpeed
+      offset.current.z += Math.sin(angleH.current) * moveSpeed
+    }
+    if (keys.current.right) {
+      offset.current.x += Math.cos(angleH.current) * moveSpeed
+      offset.current.z -= Math.sin(angleH.current) * moveSpeed
+    }
 
-    const x = DISC_POSITION[0] + Math.sin(angleH.current) * Math.cos(angleV.current) * ORBIT_RADIUS
-    const y = DISC_POSITION[1] + Math.sin(angleV.current) * ORBIT_RADIUS
-    const z = DISC_POSITION[2] + Math.cos(angleH.current) * Math.cos(angleV.current) * ORBIT_RADIUS
+    const targetX = DISC_POSITION[0] + offset.current.x
+    const targetZ = DISC_POSITION[2] + offset.current.z
+
+    const x = targetX + Math.sin(angleH.current) * Math.cos(angleV.current) * distance.current
+    const y = DISC_POSITION[1] + Math.sin(angleV.current) * distance.current
+    const z = targetZ + Math.cos(angleH.current) * Math.cos(angleV.current) * distance.current
     camera.position.set(x, y, z)
-    camera.lookAt(DISC_POSITION[0], DISC_POSITION[1], DISC_POSITION[2])
+    camera.lookAt(targetX, DISC_POSITION[1], targetZ)
   })
 
   return null
